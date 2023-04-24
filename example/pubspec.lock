@@ -12,10 +12,12 @@ packages:
   bluetooth_x_print:
     dependency: "direct dev"
     description:
-      path: ".."
-      relative: true
-    source: path
-    version: "1.0.10"
+      path: "."
+      ref: HEAD
+      resolved-ref: "1d7d7ca4dd415b190e251a22b9839efe9f543f53"
+      url: "https://github.com/manhtai831/wifi-xprinter.git"
+    source: git
+    version: "1.1.0"
   boolean_selector:
     dependency: transitive
     description:
