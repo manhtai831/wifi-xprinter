@@ -20,6 +20,7 @@ dev_dependencies:
 
   bluetooth_x_print:
     path: ../
+  path_provider: ^2.0.14
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

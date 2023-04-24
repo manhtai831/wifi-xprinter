@@ -129,6 +129,9 @@ class BluetoothPrint {
   Future<dynamic> connect(BluetoothDevice device) =>
       _channel.invokeMethod('connect', device.toJson());
 
+  Future<dynamic> netConnect(String address) =>
+      _channel.invokeMethod('netConnect', <String,dynamic>{'address': address});
+
   Future<dynamic> disconnect() => _channel.invokeMethod('disconnect');
 
   Future<dynamic> destroy() => _channel.invokeMethod('destroy');
@@ -145,16 +148,31 @@ class BluetoothPrint {
     return Future.value(true);
   }
 
-  Future<dynamic> printLabel(Map<String, dynamic> config, List<LineText> data) {
+  Future<dynamic> printLabel(Map<String, dynamic> config, List<LineText> data) async{
     Map<String, Object> args = Map();
     args['config'] = config;
     args['data'] = data.map((m) {
       return m.toJson();
     }).toList();
 
-    _channel.invokeMethod('printLabel', args);
+    await _channel.invokeMethod('printLabel', args);
     return Future.value(true);
   }
 
+
+  Future<dynamic> getBytes(Map<String, dynamic> config, List<LineText> data) async{
+    Map<String, Object> args = Map();
+    args['config'] = config;
+    args['data'] = data.map((m) {
+      return m.toJson();
+    }).toList();
+
+    
+    return await _channel.invokeMethod('getBytes', args);
+  }
+
   Future<dynamic> printTest() => _channel.invokeMethod('printTest');
+
+  Future<dynamic> netPrintTest() => _channel.invokeMethod('netPrintTest');
+
 }

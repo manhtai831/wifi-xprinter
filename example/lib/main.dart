@@ -1,11 +1,14 @@
-
 import 'dart:async';
 import 'dart:convert';
-
+import 'dart:developer';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:bluetooth_print_example/order_paint.dart';
 import 'package:bluetooth_x_print/bluetooth_print.dart';
 import 'package:bluetooth_x_print/bluetooth_print_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:collection/collection.dart';
 
 void main() => runApp(MyApp());
 
@@ -18,21 +21,23 @@ class _MyAppState extends State<MyApp> {
   BluetoothPrint bluetoothPrint = BluetoothPrint.instance;
 
   bool _connected = false;
+  bool isLoading = false;
   BluetoothDevice _device;
   String tips = 'no device connect';
-
+  Uint8List image;
+  String link;
   @override
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) => initBluetooth());
+    // WidgetsBinding.instance.addPostFrameCallback((_) => initBluetooth());
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initBluetooth() async {
     bluetoothPrint.startScan(timeout: Duration(seconds: 4));
 
-    bool isConnected=await bluetoothPrint.isConnected;
+    bool isConnected = await bluetoothPrint.isConnected;
 
     bluetoothPrint.state.listen((state) {
       print('cur device status: $state');
@@ -57,9 +62,9 @@ class _MyAppState extends State<MyApp> {
 
     if (!mounted) return;
 
-    if(isConnected) {
+    if (isConnected) {
       setState(() {
-        _connected=true;
+        _connected = true;
       });
     }
   }
@@ -68,104 +73,79 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-          appBar: AppBar(
-            title: const Text('BluetoothXPrint example app'),
-          ),
-          body: RefreshIndicator(
-            onRefresh: () =>
-                bluetoothPrint.startScan(timeout: Duration(seconds: 4)),
-            child: SingleChildScrollView(
-              child: Column(
-                children: <Widget>[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Padding(
-                        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                        child: Text(tips),
-                      ),
-                    ],
-                  ),
-                  Divider(),
-                  StreamBuilder<List<BluetoothDevice>>(
-                    stream: bluetoothPrint.scanResults,
-                    initialData: [],
-                    builder: (c, snapshot) => Column(
-                      children: snapshot.data.map((d) => ListTile(
-                        title: Text(d.name??''),
-                        subtitle: Text(d.address),
-                        onTap: () async {
-                          setState(() {
-                            _device = d;
-                          });
-                        },
-                        trailing: _device!=null && _device.address == d.address?Icon(
-                          Icons.check,
-                          color: Colors.green,
-                        ):null,
-                      )).toList(),
-                    ),
-                  ),
-                  Divider(),
-                  Container(
-                    padding: EdgeInsets.fromLTRB(20, 5, 20, 10),
-                    child: Column(
-                      children: <Widget>[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            OutlinedButton(
-                              child: Text('connect'),
-                              onPressed:  _connected?null:() async {
-                                if(_device!=null && _device.address !=null){
-                                  await bluetoothPrint.connect(_device);
-                                }else{
-                                  setState(() {
-                                    tips = 'please select device';
-                                  });
-                                  print('please select device');
-                                }
-                              },
-                            ),
-                            SizedBox(width: 10.0),
-                            OutlinedButton(
-                              child: Text('disconnect'),
-                              onPressed:  _connected?() async {
-                                await bluetoothPrint.disconnect();
-                              }:null,
-                            ),
-                          ],
-                        ),
-                        OutlinedButton(
-                          child: Text('print label(tsc)'),
-                          onPressed:  _connected?() async {
-                            Map<String, dynamic> config = Map();
-                            config['width'] = 50; // 标签宽度，单位mm
-                            config['height'] = 30; // 标签高度，单位mm
-                            config['gap'] = 2; // 标签间隔，单位mm
+        appBar: AppBar(
+          title: const Text('BluetoothXPrint example app'),
+        ),
+        body: SingleChildScrollView(
+          child: Column(
+            children: <Widget>[
+              if (isLoading) CircularProgressIndicator(),
+              Divider(),
+              Container(
+                padding: EdgeInsets.fromLTRB(20, 5, 20, 10),
+                child: Column(
+                  children: <Widget>[
+                    OutlinedButton(
+                      child: Text('print selftest'),
+                      onPressed: () async {
+                        isLoading = true;
+                        setState(() {});
+                        Socket socket = await Socket.connect('192.168.1.222', 9100);
+                        socket.destroy();
+                        var result = await bluetoothPrint.netConnect('192.168.1.222');
+                        bool b = result == true;
+                        if (!b) {
+                          isLoading = false;
+                          setState(() {});
+                        }
 
-                            // x、y坐标位置，单位dpi，1mm=8dpi
-                            List<LineText> list = [];
-                            list.add(LineText(type: LineText.TYPE_TEXT, x:10, y:10, content: 'A Title'));
-                            list.add(LineText(type: LineText.TYPE_TEXT, x:10, y:40, content: 'this is content'));
-                            list.add(LineText(type: LineText.TYPE_QRCODE, x:20, y:5, content: 'Content was Here'));
+                        if (b) {
+                          Map<String, dynamic> config = {};
+                          config['height'] = 40;
+                          config['qty'] = 3;
+                          List<LineText> list = [];
+                          // list.add(LineText(type: LineText.TYPE_TEXT, content: 'Bàn 09 - Trong Nhà Text Tiếng Việt', x: 10, y: 30));
+                          // list.add(LineText(type: LineText.TYPE_TEXT, content: 'Trà sữa trân trâu - M', x: 20, y: 20));
+                          // list.add(LineText(type: LineText.TYPE_TEXT, content: 'Bàn 09 - Trong Nhà', x: 30, y: 30));
+                          // list.add(LineText(type: LineText.TYPE_TEXT, content: 'Bàn 09 - Trong Nhà', x: 40, y: 40));
+                          // list.add(LineText(type: LineText.TYPE_TEXT, content: 'Bàn 09 - Trong Nhà', x: 50, y: 50));
+                          // list.add(LineText(type: LineText.TYPE_TEXT, content: 'Bàn 09 - Trong Nhà', x: 60, y: 60));
+                          List<String> links = [];
+                          Uint8List image = await OrderPaint()
+                              .drawText('Bàn 09 - Trong Nhà Dòng này dài lắm không')
+                              .drawText('Bàn 09 - Trong Nhà Dòng này dài lắm không')
+                              .drawText('Bàn 09 - Trong Nhà Dòng này dài lắm không')
+                              .drawText('Bàn 09 - Trong Nhà Dòng này dài lắm không')
+                              .drawText('Bàn 09 - Trong Nhà Dòng này dài lắm không')
+                              .drawText('Bàn 09 - Trong Nhà Dòng này dài lắm không')
+                              .build();
 
-                            await bluetoothPrint.printLabel(config, list);
-                          }:null,
-                        ),
-                        OutlinedButton(
-                          child: Text('print selftest'),
-                          onPressed:  _connected?() async {
-                            await bluetoothPrint.printTest();
-                          }:null,
-                        )
-                      ],
-                    ),
-                  )
-                ],
+                          final tempDir = await getTemporaryDirectory();
+                          File file = await File('${tempDir.path}/image.png').create();
+                          file.writeAsBytesSync(image);
+                          links.add(file.path);
+
+                          File file2 = await File('${tempDir.path}/image2.png').create();
+                          file2.writeAsBytesSync(image);
+                          links.add(file2.path);
+
+                          list.add(LineText(type: LineText.TYPE_IMAGE, content: file.path, x: 10, y: 20));
+                          list.add(LineText(type: LineText.TYPE_IMAGE, content: file2.path, x: 15, y: 160));
+
+                          await bluetoothPrint.printLabel(config, list);
+                          // bluetoothPrint.disconnect();
+                          isLoading = false;
+                          setState(() {});
+                        }
+                      },
+                    )
+                  ],
+                ),
               ),
-            ),
+              if (link != null) Image.file(File(link))
+            ],
           ),
+        ),
         floatingActionButton: StreamBuilder<bool>(
           stream: bluetoothPrint.isScanning,
           initialData: false,
@@ -177,9 +157,7 @@ class _MyAppState extends State<MyApp> {
                 backgroundColor: Colors.red,
               );
             } else {
-              return FloatingActionButton(
-                  child: Icon(Icons.search),
-                  onPressed: () => bluetoothPrint.startScan(timeout: Duration(seconds: 4)));
+              return FloatingActionButton(child: Icon(Icons.search), onPressed: () => bluetoothPrint.startScan(timeout: Duration(seconds: 4)));
             }
           },
         ),

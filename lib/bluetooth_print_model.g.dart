@@ -26,6 +26,8 @@ Map<String, dynamic> _$BluetoothDeviceToJson(BluetoothDevice instance) {
   writeNotNull('name', instance.name);
   writeNotNull('address', instance.address);
   writeNotNull('type', instance.type);
+
+  
   writeNotNull('connected', instance.connected);
   return val;
 }
@@ -73,6 +75,6 @@ Map<String, dynamic> _$LineTextToJson(LineText instance) {
   writeNotNull('x_multification', instance.x_multification);
   writeNotNull('y_multification', instance.y_multification);
   writeNotNull('font_type', instance.font_type);
-  writeNotNull('rotation', instance.font_type);
+  writeNotNull('rotation', instance.rotation);
   return val;
 }
