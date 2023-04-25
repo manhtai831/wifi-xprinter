@@ -12,11 +12,9 @@ packages:
   bluetooth_x_print:
     dependency: "direct dev"
     description:
-      path: "."
-      ref: HEAD
-      resolved-ref: "1d7d7ca4dd415b190e251a22b9839efe9f543f53"
-      url: "https://github.com/manhtai831/wifi-xprinter.git"
-    source: git
+      path: ".."
+      relative: true
+    source: path
     version: "1.1.0"
   boolean_selector:
     dependency: transitive
@@ -104,10 +102,10 @@ packages:
     dependency: transitive
     description:
       name: json_annotation
-      sha256: cb314f00b2488de7bc575207e54402cd2f92363f333a7933fd1b0631af226baa
+      sha256: c33da08e136c3df0190bd5bbe51ae1df4a7d96e7954d1d7249fea2968a72d317
       url: "https://pub.dev"
     source: hosted
-    version: "4.6.0"
+    version: "4.8.0"
   matcher:
     dependency: transitive
     description:
@@ -216,10 +214,10 @@ packages:
     dependency: transitive
     description:
       name: rxdart
-      sha256: "5d22055fd443806c03ef24a02000637cf51eae49c2a0168d38a43fc166b0209c"
+      sha256: "0c7c0cedd93788d996e33041ffecda924cc54389199cde4e6a34b440f50044cb"
       url: "https://pub.dev"
     source: hosted
-    version: "0.27.5"
+    version: "0.27.7"
   sky_engine:
     dependency: transitive
     description: flutter

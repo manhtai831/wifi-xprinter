@@ -19,8 +19,8 @@ dev_dependencies:
     sdk: flutter
 
   bluetooth_x_print:
-    git: 
-      url: https://github.com/manhtai831/wifi-xprinter.git
+    path: ../
+
   path_provider: ^2.0.14
 
 # For information on the generic Dart part of this file, see the

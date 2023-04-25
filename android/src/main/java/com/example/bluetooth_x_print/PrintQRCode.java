@@ -2,17 +2,15 @@ package com.example.bluetooth_x_print;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.util.Base64;
 
-import net.posprinter.utils.DataForSendToPrinterTSC;
-import net.posprinter.utils.BitmapToByteData;
 
 import android.util.Log;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
+
+import net.posprinter.utils.BitmapToByteData;
+import net.posprinter.utils.DataForSendToPrinterTSC;
+
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
@@ -56,8 +54,10 @@ public class PrintQRCode {
             } else if ("image".equals(type)) {
 //                        byte[] bytes = Base64.decode(content, Base64.DEFAULT);
                 Bitmap bitmap = BitmapFactory.decodeFile(content);
-                Log.d(TAG, "mapToLabel: " + bitmap);
-                list.add(DataForSendToPrinterTSC.bitmap(x, y, 0, bitmap, BitmapToByteData.BmpType.Threshold));
+
+                byte[] bytes = DataForSendToPrinterTSC.bitmap(x, y, 0, bitmap, BitmapToByteData.BmpType.Threshold);
+                Log.d(TAG, "mapToLabel: bytes" + Arrays.toString(bytes));
+                list.add(bytes);
             }
         }
 

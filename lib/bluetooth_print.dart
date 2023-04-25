@@ -10,14 +10,11 @@ class BluetoothPrint {
   static const int CONNECTED = 1;
   static const int DISCONNECTED = 0;
 
-  static const MethodChannel _channel =
-      const MethodChannel('$NAMESPACE/methods');
-  static const EventChannel _stateChannel =
-      const EventChannel('$NAMESPACE/state');
+  static const MethodChannel _channel = const MethodChannel('$NAMESPACE/methods');
+  static const EventChannel _stateChannel = const EventChannel('$NAMESPACE/state');
 
   Stream<MethodCall> get _methodStream => _methodStreamController.stream;
-  final StreamController<MethodCall> _methodStreamController =
-      StreamController.broadcast();
+  final StreamController<MethodCall> _methodStreamController = StreamController.broadcast();
 
   BluetoothPrint._() {
     _channel.setMethodCallHandler((MethodCall call) async {
@@ -30,21 +27,17 @@ class BluetoothPrint {
 
   static BluetoothPrint get instance => _instance;
 
-  Future<bool> get isAvailable async =>
-      await _channel.invokeMethod('isAvailable').then<bool>((d) => d);
+  Future<bool> get isAvailable async => await _channel.invokeMethod('isAvailable').then<bool>((d) => d);
 
-  Future<bool> get isOn async =>
-      await _channel.invokeMethod('isOn').then<bool>((d) => d);
+  Future<bool> get isOn async => await _channel.invokeMethod('isOn').then<bool>((d) => d);
 
-  Future<bool?> get isConnected async =>
-      await _channel.invokeMethod('isConnected');
+  Future<bool?> get isConnected async => await _channel.invokeMethod('isConnected');
 
   BehaviorSubject<bool> _isScanning = BehaviorSubject.seeded(false);
 
   Stream<bool> get isScanning => _isScanning.stream;
 
-  BehaviorSubject<List<BluetoothDevice>> _scanResults =
-      BehaviorSubject.seeded([]);
+  BehaviorSubject<List<BluetoothDevice>> _scanResults = BehaviorSubject.seeded([]);
 
   Stream<List<BluetoothDevice>> get scanResults => _scanResults.stream;
 
@@ -126,18 +119,26 @@ class BluetoothPrint {
     _isScanning.add(false);
   }
 
-  Future<dynamic> connect(BluetoothDevice device) =>
-      _channel.invokeMethod('connect', device.toJson());
+  Future<dynamic> connect(BluetoothDevice device) => _channel.invokeMethod('connect', device.toJson());
 
-  Future<dynamic> netConnect(String address) =>
-      _channel.invokeMethod('netConnect', <String,dynamic>{'address': address});
+  Future<dynamic> netConnect(String address) => _channel.invokeMethod('netConnect', <String, dynamic>{'address': address});
 
   Future<dynamic> disconnect() => _channel.invokeMethod('disconnect');
 
   Future<dynamic> destroy() => _channel.invokeMethod('destroy');
 
-  Future<dynamic> printReceipt(
-      Map<String, dynamic> config, List<LineText> data) {
+  Future<dynamic> printAll(Map<String, dynamic> config, List<LineText> data) async {
+    Map<String, Object> args = Map();
+    args['config'] = config;
+    args['data'] = data.map((m) {
+      return m.toJson();
+    }).toList();
+
+    var result = await _channel.invokeMethod('print', args);
+    return result;
+  }
+
+  Future<dynamic> printReceipt(Map<String, dynamic> config, List<LineText> data) {
     Map<String, Object> args = Map();
     args['config'] = config;
     args['data'] = data.map((m) {
@@ -148,7 +149,7 @@ class BluetoothPrint {
     return Future.value(true);
   }
 
-  Future<dynamic> printLabel(Map<String, dynamic> config, List<LineText> data) async{
+  Future<dynamic> printLabel(Map<String, dynamic> config, List<LineText> data) async {
     Map<String, Object> args = Map();
     args['config'] = config;
     args['data'] = data.map((m) {
@@ -159,20 +160,17 @@ class BluetoothPrint {
     return Future.value(true);
   }
 
-
-  Future<dynamic> getBytes(Map<String, dynamic> config, List<LineText> data) async{
+  Future<dynamic> getBytes(Map<String, dynamic> config, List<LineText> data) async {
     Map<String, Object> args = Map();
     args['config'] = config;
     args['data'] = data.map((m) {
       return m.toJson();
     }).toList();
 
-    
     return await _channel.invokeMethod('getBytes', args);
   }
 
   Future<dynamic> printTest() => _channel.invokeMethod('printTest');
 
   Future<dynamic> netPrintTest() => _channel.invokeMethod('netPrintTest');
-
 }

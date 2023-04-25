@@ -10,44 +10,44 @@ import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
-import android.content.ComponentName;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.content.ServiceConnection;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.content.pm.PackageManager;
 import android.os.IBinder;
-import android.util.Base64;
 import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import net.posprinter.posprinterface.IMyBinder;
-import net.posprinter.posprinterface.TaskCallback;
-import net.posprinter.service.PosprinterService;
 import net.posprinter.posprinterface.ProcessData;
-import net.posprinter.utils.BitmapToByteData;
+import net.posprinter.posprinterface.UiExecute;
+import net.posprinter.service.PosprinterService;
 import net.posprinter.utils.DataForSendToPrinterTSC;
-
-import io.flutter.embedding.engine.plugins.FlutterPlugin;
-import io.flutter.embedding.engine.plugins.activity.ActivityAware;
-import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
-import io.flutter.plugin.common.*;
-import io.flutter.plugin.common.EventChannel.EventSink;
-import io.flutter.plugin.common.EventChannel.StreamHandler;
-import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
-import io.flutter.plugin.common.MethodChannel.Result;
-import io.flutter.plugin.common.PluginRegistry.Registrar;
-import io.flutter.plugin.common.PluginRegistry.RequestPermissionsResultListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import io.flutter.embedding.engine.plugins.FlutterPlugin;
+import io.flutter.embedding.engine.plugins.activity.ActivityAware;
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
+import io.flutter.plugin.common.BinaryMessenger;
+import io.flutter.plugin.common.EventChannel;
+import io.flutter.plugin.common.EventChannel.EventSink;
+import io.flutter.plugin.common.EventChannel.StreamHandler;
+import io.flutter.plugin.common.MethodCall;
+import io.flutter.plugin.common.MethodChannel;
+import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
+import io.flutter.plugin.common.MethodChannel.Result;
+import io.flutter.plugin.common.PluginRegistry;
+import io.flutter.plugin.common.PluginRegistry.Registrar;
+import io.flutter.plugin.common.PluginRegistry.RequestPermissionsResultListener;
 
 /**
  * BluetoothPrintPlugin
@@ -162,16 +162,16 @@ public class BluetoothPrintPlugin implements FlutterPlugin, ActivityAware, Metho
             stateChannel = new EventChannel(messenger, NAMESPACE + "/state");
             stateChannel.setStreamHandler(stateHandler);
 
-            mBluetoothManager = (BluetoothManager) application.getSystemService(Context.BLUETOOTH_SERVICE);
-            mBluetoothAdapter = mBluetoothManager.getAdapter();
-
-            if (registrar != null) {
-                // V1 embedding setup for activity listeners.
-                registrar.addRequestPermissionsResultListener(this);
-            } else {
-                // V2 embedding setup for activity listeners.
-                activityBinding.addRequestPermissionsResultListener(this);
-            }
+//            mBluetoothManager = (BluetoothManager) application.getSystemService(Context.BLUETOOTH_SERVICE);
+//            mBluetoothAdapter = mBluetoothManager.getAdapter();
+//
+//            if (registrar != null) {
+//                // V1 embedding setup for activity listeners.
+//                registrar.addRequestPermissionsResultListener(this);
+//            } else {
+//                // V2 embedding setup for activity listeners.
+//                activityBinding.addRequestPermissionsResultListener(this);
+//            }
         }
     }
 
@@ -191,10 +191,10 @@ public class BluetoothPrintPlugin implements FlutterPlugin, ActivityAware, Metho
 
     @Override
     public void onMethodCall(MethodCall call, Result result) {
-        if (mBluetoothAdapter == null && !"isAvailable".equals(call.method)) {
-            result.error("bluetooth_unavailable", "the device does not have bluetooth", null);
-            return;
-        }
+//        if (mBluetoothAdapter == null && !"isAvailable".equals(call.method)) {
+//            result.error("bluetooth_unavailable", "the device does not have bluetooth", null);
+//            return;
+//        }
 
         final Map<String, Object> args = call.arguments();
 
@@ -228,9 +228,7 @@ public class BluetoothPrintPlugin implements FlutterPlugin, ActivityAware, Metho
                 stopScan();
                 result.success(null);
                 break;
-            case "connect":
-                connect(result, args);
-                break;
+
             case "netConnect":
                 netConnect(result, args);
                 break;
@@ -251,9 +249,6 @@ public class BluetoothPrintPlugin implements FlutterPlugin, ActivityAware, Metho
                 break;
             case "getBytes":
                 getBytes(result, args);
-                break;
-            case "printTest":
-                printTest(result);
                 break;
             case "netPrintTest":
                 netPrintTest(result);
@@ -364,72 +359,73 @@ public class BluetoothPrintPlugin implements FlutterPlugin, ActivityAware, Metho
         }
     }
 
-    private void connect(final Result result, Map<String, Object> args) {
-        if (args.containsKey("address")) {
-            String address = (String) args.get("address");
-            disconnect();
-
-            myBinder.ConnectBtPort(address, new TaskCallback() {
-                @Override
-                public void OnSucceed() {
-                    IS_CONNECT = true;
-                    result.success(true);
-                }
-
-                @Override
-                public void OnFailed() {
-                    IS_CONNECT = false;
-                    result.success(false);
-                    result.error("OnFailed", "Cannot connect Device", null);
-                }
-            });
-        } else {
-            result.error("invalid_argument", "argument 'address' not found", null);
-        }
-
-    }
 
     private void netConnect(final Result result, Map<String, Object> args) {
-
-        if (args.containsKey("address")) {
-            final String address = (String) args.get("address");
-            disconnect();
-            Log.d(TAG, "netConnect: address: " + address);
-
-            myBinder.ConnectNetPort(address, 9100, new TaskCallback() {
-                @Override
-                public void OnSucceed() {
-                    Log.d(TAG, "netConnect: Success");
-                    IS_CONNECT = true;
-                    result.success(true);
-                }
-
-                @Override
-                public void OnFailed() {
-                    IS_CONNECT = false;
-                    result.success(false);
-//                    result.error("OnFailed", "Cannot connect to Socket " + address, null);
-                }
-            });
-        } else {
-            result.error("invalid_argument", "argument 'address' not found", null);
+        if (!args.containsKey("address")) {
+            result.success(PrintResponse.error(3));
+            return;
         }
+        final String address = (String) args.get("address");
+
+        Log.d(TAG, "netConnect: CONNECTINGGGGGGGGGGGGGGGGGG");
+if(!IS_CONNECT){
+    myBinder.connectNetPort(address, 9100, new UiExecute() {
+        @Override
+        public void onsucess() {
+            IS_CONNECT = true;
+            result.success(PrintResponse.success());
+        }
+
+        @Override
+        public void onfailed() {
+            IS_CONNECT = false;
+            result.success(PrintResponse.error(1));
+        }
+    });
+    return;
+}
+        myBinder.disconnectCurrentPort(new UiExecute() {
+            @Override
+            public void onsucess() {
+                myBinder.connectNetPort(address, 9100, new UiExecute() {
+                    @Override
+                    public void onsucess() {
+                        IS_CONNECT = true;
+                        result.success(PrintResponse.success());
+                    }
+
+                    @Override
+                    public void onfailed() {
+                        IS_CONNECT = false;
+                        result.success(PrintResponse.error(1));
+                    }
+                });
+
+            }
+
+            @Override
+            public void onfailed() {
+                result.success(PrintResponse.error());
+            }
+        });
+
 
     }
 
     private boolean disconnect() {
         if (IS_CONNECT) {
 
-            myBinder.DisconnetNetPort(new TaskCallback() {
+            myBinder.disconnectCurrentPort(new UiExecute() {
                 @Override
-                public void OnSucceed() {
+                public void onsucess() {
                     IS_CONNECT = false;
                 }
 
                 @Override
-                public void OnFailed() {
+                public void onfailed() {
                     IS_CONNECT = true;
                 }
+
             });
         }
 
@@ -440,46 +436,18 @@ public class BluetoothPrintPlugin implements FlutterPlugin, ActivityAware, Metho
         return true;
     }
 
-    private void printTest(final Result result) {
-        if (IS_CONNECT) {
-            myBinder.WriteSendData(new TaskCallback() {
-                @Override
-                public void OnSucceed() {
-                }
-
-                @Override
-                public void OnFailed() {
-                    result.error("OnFailed", "Failed sending data to printer", null);
-                }
-            }, new ProcessData() {
-                @Override
-                public List<byte[]> processDataBeforeSend() {
-                    List<byte[]> list = new ArrayList<>();
-                    list.add(DataForSendToPrinterTSC.sizeBymm(70, 50));
-                    list.add(DataForSendToPrinterTSC.gapBymm(2, 0));
-                    list.add(DataForSendToPrinterTSC.cls());
-                    list.add(DataForSendToPrinterTSC.direction(0));
-                    list.add(DataForSendToPrinterTSC.qrCode(10, 30, "M", 6, "A", 0, "M1", "S3", "123456789"));
-                    list.add(DataForSendToPrinterTSC.text(150, 30, "5", 0, 1, 1, "XXXXXX XXXXXXX"));
-                    list.add(DataForSendToPrinterTSC.print(1));
-
-                    return list;
-                }
-            });
-        }
-
-    }
 
     private void netPrintTest(final Result result) {
 
-        myBinder.WriteSendData(new TaskCallback() {
+        myBinder.writeDataByYouself(new UiExecute() {
+
             @Override
-            public void OnSucceed() {
+            public void onsucess() {
                 result.success("done");
             }
 
             @Override
-            public void OnFailed() {
+            public void onfailed() {
                 result.error("OnFailed", "Failed sending data to printer", null);
             }
         }, new ProcessData() {
@@ -504,37 +472,35 @@ public class BluetoothPrintPlugin implements FlutterPlugin, ActivityAware, Metho
     @SuppressWarnings("unchecked")
     private void print(final Result result, Map<String, Object> args) {
         if (!IS_CONNECT) {
-            result.error("not connect", "state not right", null);
+            result.success(PrintResponse.error(1));
+        }
+        if (!args.containsKey("config") || !args.containsKey("data")) {
+            result.success(PrintResponse.error(3));
         }
 
-        if (args.containsKey("config") && args.containsKey("data")) {
-            final Map<String, Object> config = (Map<String, Object>) args.get("config");
-            final List<Map<String, Object>> listData = (List<Map<String, Object>>) args.get("data");
-            if (listData == null) return;
-            Log.d(TAG, "print: printing");
-            myBinder.WriteSendData(new TaskCallback() {
-                @Override
-                public void OnSucceed() {
-                    Log.d(TAG, "OnSucceed: Print success");
-                    disconnect();
-                    myBinder.ClearBuffer();
-                    result.success("done");
-                }
+        final Map<String, Object> config = (Map<String, Object>) args.get("config");
+        final List<Map<String, Object>> listData = (List<Map<String, Object>>) args.get("data");
+        if (listData == null) return;
+        if (config == null) return;
+        Log.d(TAG, "print: PRINTINGGGGGGGGGGGGGGGGGGGGGGGGG");
+        myBinder.writeDataByYouself(new UiExecute() {
+            @Override
+            public void onsucess() {
+                disconnect();
+                result.success(PrintResponse.success());
+            }
 
-                @Override
-                public void OnFailed() {
-                    result.error("OnFailed", "Failed sending data to printer", null);
-                }
-            }, new ProcessData() {
-                @Override
-                public List<byte[]> processDataBeforeSend() {
+            @Override
+            public void onfailed() {
+                result.success(PrintResponse.error());
+            }
+        }, new ProcessData() {
+            @Override
+            public List<byte[]> processDataBeforeSend() {
 
-                    return PrintQRCode.mapToLabel(config, listData);
-                }
-            });
-        } else {
-            result.error("please add config or data", "", null);
-        }
+                return PrintQRCode.mapToLabel(config, listData);
+            }
+        });
 
     }
 

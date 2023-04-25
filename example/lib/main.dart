@@ -90,19 +90,25 @@ class _MyAppState extends State<MyApp> {
                       onPressed: () async {
                         isLoading = true;
                         setState(() {});
-                        Socket socket = await Socket.connect('192.168.1.222', 9100);
-                        socket.destroy();
-                        var result = await bluetoothPrint.netConnect('192.168.1.222');
-                        bool b = result == true;
-                        if (!b) {
-                          isLoading = false;
-                          setState(() {});
-                        }
+                        try {
+                          Socket socket = await Socket.connect('192.168.1.222', 9100);
 
-                        if (b) {
+                          print(socket);
+                          //   socket.destroy();
+
+                          // var result = await bluetoothPrint.netConnect('192.168.1.222');
+                          // print(result);
+                          // bool b = result['code'] == 0;
+                          // if (!b) {
+                          //   isLoading = false;
+                          //   setState(() {});
+                          // }
+
+                          // if (b) {
                           Map<String, dynamic> config = {};
+                          config['width'] = 58;
                           config['height'] = 40;
-                          config['qty'] = 3;
+                          // config['qty'] = 3;
                           List<LineText> list = [];
                           // list.add(LineText(type: LineText.TYPE_TEXT, content: 'Bàn 09 - Trong Nhà Text Tiếng Việt', x: 10, y: 30));
                           // list.add(LineText(type: LineText.TYPE_TEXT, content: 'Trà sữa trân trâu - M', x: 20, y: 20));
@@ -112,6 +118,12 @@ class _MyAppState extends State<MyApp> {
                           // list.add(LineText(type: LineText.TYPE_TEXT, content: 'Bàn 09 - Trong Nhà', x: 60, y: 60));
                           List<String> links = [];
                           Uint8List image = await OrderPaint()
+                              .drawText('Bàn 09 - Trong Nhà Dòng này dài lắm không')
+                              .drawText('Bàn 09 - Trong Nhà Dòng này dài lắm không')
+                              .drawText('Bàn 09 - Trong Nhà Dòng này dài lắm không')
+                              .drawText('Bàn 09 - Trong Nhà Dòng này dài lắm không')
+                              .drawText('Bàn 09 - Trong Nhà Dòng này dài lắm không')
+                              .drawText('Bàn 09 - Trong Nhà Dòng này dài lắm không')
                               .drawText('Bàn 09 - Trong Nhà Dòng này dài lắm không')
                               .drawText('Bàn 09 - Trong Nhà Dòng này dài lắm không')
                               .drawText('Bàn 09 - Trong Nhà Dòng này dài lắm không')
@@ -129,14 +141,29 @@ class _MyAppState extends State<MyApp> {
                           file2.writeAsBytesSync(image);
                           links.add(file2.path);
 
-                          list.add(LineText(type: LineText.TYPE_IMAGE, content: file.path, x: 10, y: 20));
-                          list.add(LineText(type: LineText.TYPE_IMAGE, content: file2.path, x: 15, y: 160));
+                          list.add(LineText(type: LineText.TYPE_IMAGE, content: file.path, x: 10, y: 80));
+                          // list.add(LineText(type: LineText.TYPE_IMAGE, content: file2.path, x: 15, y: 40));
 
-                          await bluetoothPrint.printLabel(config, list);
+                          // var resultOK = await bluetoothPrint.printAll(config, list);
+                          // print(resultOK);
+                          // var resultOK = await bluetoothPrint.printAll(
+                          //     config, [LineText(type: LineText.TYPE_TEXT, content: ' file2.path file2.path file2.path file2.path', x: 0, y: 0)]);
+                          var resultOk = await bluetoothPrint.getBytes(config, list);
+                          for (var element in resultOk) {
+                            socket.add(element);
+                          }
+
+                          print(resultOk);
+                          socket.destroy();
                           // bluetoothPrint.disconnect();
+                          // bluetoothPrint.netPrintTest();
+                          isLoading = false;
+                          setState(() {});
+                        } catch (e) {
                           isLoading = false;
                           setState(() {});
                         }
+                        // }
                       },
                     )
                   ],
