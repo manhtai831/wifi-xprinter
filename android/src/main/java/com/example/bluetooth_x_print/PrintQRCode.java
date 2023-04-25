@@ -22,7 +22,7 @@ public class PrintQRCode {
         List<byte[]> list = new ArrayList<>();
 
         int width = (int) (config.get("width") == null ? 50 : config.get("width")); // 单位：mm
-        int height = (int) (config.get("height") == null ? 30 : config.get("height")); // 单位：mm
+            int height = (int) (config.get("height") == null ? 30 : config.get("height")); // 单位：mm
         int gap = (int) (config.get("gap") == null ? 2 : config.get("gap")); // 单位：mm
         int qty = (int) (config.get("qty") == null ? 1 : config.get("qty")); // 单位：mm
 
@@ -45,18 +45,19 @@ public class PrintQRCode {
 
             if ("text".equals(type)) {
                 list.add(DataForSendToPrinterTSC.text(x, y, font_type, rotation, x_multification, y_multification, content));
-                Log.d(TAG, x + ", " + y + ", " + font_type + ", " + x_multification + ", " + y_multification);
+            }else  if ("cut".equals(type)) {
+                list.add(DataForSendToPrinterTSC.cut());
+            }else  if ("sound".equals(type)) {
+                list.add(DataForSendToPrinterTSC.sound(2,1000));
+            } else  if ("selfTest".equals(type)) {
+                list.add(DataForSendToPrinterTSC.selfTest());
             } else if ("barcode".equals(type)) {
                 list.add(DataForSendToPrinterTSC.barCode(x, y, "128", 100, 1, rotation, 2, 2, content));
             } else if ("qrcode".equals(type)) {
-                Log.d(TAG, x + ", " + y + ", " + size);
                 list.add(DataForSendToPrinterTSC.qrCode(x, y, "M", size, "A", rotation, "M1", "S3", content));
             } else if ("image".equals(type)) {
-//                        byte[] bytes = Base64.decode(content, Base64.DEFAULT);
                 Bitmap bitmap = BitmapFactory.decodeFile(content);
-
                 byte[] bytes = DataForSendToPrinterTSC.bitmap(x, y, 0, bitmap, BitmapToByteData.BmpType.Threshold);
-                Log.d(TAG, "mapToLabel: bytes" + Arrays.toString(bytes));
                 list.add(bytes);
             }
         }

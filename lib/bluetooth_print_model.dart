@@ -39,6 +39,9 @@ class LineText {
   static const String TYPE_BARCODE = 'barcode';
   static const String TYPE_QRCODE = 'qrcode';
   static const String TYPE_IMAGE = 'image';
+    static const String TYPE_CUT = 'cut';
+  static const String TYPE_SELF_TEST = 'selfTest';
+  static const String TYPE_SOUND = 'sound';
   static const int ALIGN_LEFT = 0;
   static const int ALIGN_CENTER = 1;
   static const int ALIGN_RIGHT = 2;

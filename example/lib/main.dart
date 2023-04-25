@@ -120,8 +120,10 @@ class _MyAppState extends State<MyApp> {
                           Uint8List image = await OrderPaint()
                               .drawText('Bàn 09 - Trong Nhà Dòng này dài lắm không')
                               .drawText('Bàn 09 - Trong Nhà Dòng này dài lắm không')
+                              .drawSeparate()
                               .drawText('Bàn 09 - Trong Nhà Dòng này dài lắm không')
                               .drawText('Bàn 09 - Trong Nhà Dòng này dài lắm không')
+                              .drawBox(height: 58)
                               .drawText('Bàn 09 - Trong Nhà Dòng này dài lắm không')
                               .drawText('Bàn 09 - Trong Nhà Dòng này dài lắm không')
                               .drawText('Bàn 09 - Trong Nhà Dòng này dài lắm không')
@@ -148,12 +150,14 @@ class _MyAppState extends State<MyApp> {
                           // print(resultOK);
                           // var resultOK = await bluetoothPrint.printAll(
                           //     config, [LineText(type: LineText.TYPE_TEXT, content: ' file2.path file2.path file2.path file2.path', x: 0, y: 0)]);
+                          socket.listen((event) {
+                            log('event: ${event}');
+                          });
                           var resultOk = await bluetoothPrint.getBytes(config, list);
                           for (var element in resultOk) {
                             socket.add(element);
                           }
 
-                          print(resultOk);
                           socket.destroy();
                           // bluetoothPrint.disconnect();
                           // bluetoothPrint.netPrintTest();
